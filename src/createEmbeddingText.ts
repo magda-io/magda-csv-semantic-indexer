@@ -109,7 +109,6 @@ export const createEmbeddingText: CreateEmbeddingText = async ({
     const yamlText = toYaml({
         Title: title || undefined,
         Format: format || "CSV",
-        Description: description || undefined,
         "File name": fileName || undefined,
         "Temporal coverage": temporalCoverage || undefined,
         Licence: licence || undefined,
@@ -117,6 +116,7 @@ export const createEmbeddingText: CreateEmbeddingText = async ({
         Themes: themes || undefined,
         Keywords: keywords || undefined,
         Languages: languages || undefined,
+        Description: description || undefined,
         Columns: columns || undefined
     });
 
