@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Chunker } from "../chunker.js";
+import { Chunker } from "../Chunker.js";
 
 describe("Chunker", () => {
     it("should chunk yaml text with proper overlapping", async () => {

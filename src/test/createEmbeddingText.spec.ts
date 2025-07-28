@@ -3,7 +3,8 @@ import { parse as parseYaml } from "yaml";
 import * as fs from "fs";
 import { join, basename } from "path";
 import { tmpdir } from "os";
-import { createEmbeddingText, formatTemporal } from "../createEmbeddingText.js";
+import { createEmbeddingText, formatTemporal, getColumnsFromCSVStream } from "../createEmbeddingText.js";
+import nock from "nock";
 
 describe("createEmbeddingText", () => {
     let tempFile: string;
@@ -68,7 +69,7 @@ describe("createEmbeddingText", () => {
             Themes: ["Theme1", "Theme2"],
             Keywords: ["Keyword1", "Keyword2"],
             Languages: ["en", "zh"],
-            Columns: ["colA", "colB", "colC"]
+            "Column names": ["colA", "colB", "colC"]
         };
 
         expect(yamlObj).to.deep.equal(expected);
@@ -114,7 +115,7 @@ describe("createEmbeddingText", () => {
         const expected = {
             Title: "Dataset Title",
             Format: "CSV",
-            Columns: ["colA", "colB", "colC"]
+            "Column names": ["colA", "colB", "colC"]
         };
 
         expect(yamlObj).to.deep.equal(expected);
@@ -161,7 +162,7 @@ describe("createEmbeddingText", () => {
             Format: "CSV",
             "File name": "data.csv",
             Description: "Dataset Desc",
-            Columns: ["colA", "colB", "colC"]
+            "Column names": ["colA", "colB", "colC"]
         };
 
         expect(yamlObj).to.deep.equal(expected);
@@ -241,6 +242,118 @@ describe("createEmbeddingText", () => {
         const yamlObj = parseYaml(text);
 
         expect(yamlObj.Description).to.equal("First line\nSecond line");
+    });
+});
 
+describe("getColumnsFromCSVStream", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+    });
+
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
+    it("should extract column names from comma-separated CSV file", async () => {
+        nock("http://example.com")
+            .get("/test-csv")
+            .reply(200, "column1,column2,column3\nvalue1,value2,value3", {
+                "Content-Type": "text/csv"
+            });
+
+        const columns = await getColumnsFromCSVStream("http://example.com/test-csv");
+        expect(columns).to.deep.equal(["column1", "column2", "column3"]);
+    });
+
+    it("should handle empty CSV file", async () => {
+        nock("http://example.com")
+            .get("/empty-csv")
+            .reply(200, "", {
+                "Content-Type": "text/csv"
+            });
+
+        const columns = await getColumnsFromCSVStream("http://example.com/empty-csv");
+        expect(columns).to.deep.equal([]);
+    });
+
+    it("should throw exception on HTTP 404 error", async () => {
+        nock("http://example.com")
+            .get("/not-found")
+            .reply(404, "Not Found");
+
+        try {
+            await getColumnsFromCSVStream("http://example.com/not-found");
+            expect.fail("should throw exception");
+        } catch (error: any) {
+            expect(error.message).to.include("HTTP 404");
+        }
+    });
+
+    it("should throw exception on HTTP 500 error", async () => {
+        nock("http://example.com")
+            .get("/server-error")
+            .reply(500, "Internal Server Error");
+
+        try {
+            await getColumnsFromCSVStream("http://example.com/server-error");
+            expect.fail("should throw exception");
+        } catch (error: any) {
+            expect(error.message).to.include("HTTP 500");
+        }
+    });
+
+    it("should throw exception on network error", async () => {
+        nock("http://invalid-url-that-does-not-exist.com")
+            .get("/test.csv")
+            .replyWithError("Network Error");
+
+        try {
+            await getColumnsFromCSVStream("http://invalid-url-that-does-not-exist.com/test.csv");
+            expect.fail("should throw exception");
+        } catch (error: any) {
+            expect(error).to.be.instanceOf(Error);
+        }
+    });
+
+    it("should handle CSV file with BOM", async () => {
+        const bom = Buffer.from([0xEF, 0xBB, 0xBF]);
+        const csvContent = "column1,column2,column3\nvalue1,value2,value3";
+        const bomCsv = Buffer.concat([bom, Buffer.from(csvContent)]);
+
+        nock("http://example.com")
+            .get("/bom-csv")
+            .reply(200, bomCsv, {
+                "Content-Type": "text/csv"
+            });
+
+        const columns = await getColumnsFromCSVStream("http://example.com/bom-csv");
+        expect(columns).to.deep.equal(["column1", "column2", "column3"]);
+    });
+
+    it("should handle CSV file with empty columns", async () => {
+        nock("http://example.com")
+            .get("/messy-csv")
+            .reply(200, "col1, ,col3,\n\nval1,val2,val3,val4", {
+                "Content-Type": "text/csv"
+            });
+
+        const columns = await getColumnsFromCSVStream("http://example.com/messy-csv");
+        expect(columns).to.deep.equal(["col1", "col3"]);
+    });
+
+    it("should timeout and abort correctly", async () => {
+        nock("http://example.com")
+            .get("/slow-csv")
+            .delay(3000)
+            .reply(200, "column1,column2,column3\nvalue1,value2,value3", {
+                "Content-Type": "text/csv"
+            });
+
+        try {
+            await getColumnsFromCSVStream("http://example.com/slow-csv", 1000);
+            expect.fail("should throw timeout exception");
+        } catch (error: any) {
+            expect(error).to.be.instanceOf(Error);
+        }
     });
 });

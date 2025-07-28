@@ -5,7 +5,7 @@ import semanticIndexer, {
 } from "@magda/semantic-indexer-sdk";
 import { csvSemanticIndexerArgs } from "./csvSemanticIndexerArgs.js";
 import { createEmbeddingText } from "./createEmbeddingText.js";
-import { Chunker } from "./chunker.js";
+import { Chunker } from "./Chunker.js";
 
 const port = csvSemanticIndexerArgs.port;
 const args = commonYargs(port, `http://localhost:${port}`);
@@ -21,7 +21,7 @@ const options: SemanticIndexerOptions = {
     id: csvSemanticIndexerArgs.id,
     itemType: "storageObject",
     formatTypes: ["csv"],
-    autoDownloadFile: true,
+    autoDownloadFile: false,
     createEmbeddingText: createEmbeddingText,
     chunkStrategy: chunkStrategy,
 };
