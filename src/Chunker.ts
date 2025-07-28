@@ -16,14 +16,14 @@ export class Chunker {
         this.overlap = overlap * 4;
         this.splitter = new RecursiveCharacterTextSplitter({
             separators: [
-                "\nColumns",
-                "\nDescription",
-                "\nTitle",
-                "\nKeywords",
-                "\nThemes",
-                "\nTemporal coverage",
-                "\nLanguages",
-                "\nPublisher",
+                "\nColumn names:",
+                "\nDescription:",
+                "\nTitle:",
+                "\nKeywords:",
+                "\nThemes:",
+                "\nTemporal coverage:",
+                "\nLanguages:",
+                "\nPublisher:",
                 "\n",
                 " ",
                 ""
