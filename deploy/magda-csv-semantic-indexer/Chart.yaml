@@ -1,0 +1,12 @@
+apiVersion: v2
+name: magda-csv-semantic-indexer
+version: 1.0.0-alpha.0
+kubeVersion: ">= 1.14.0-0"
+description: A Helm chart for Magda CSV Semantic Indexer
+home: "https://github.com/magda-io/magda-csv-semantic-indexer"
+sources:
+  - https://github.com/magda-io/magda-csv-semantic-indexer
+dependencies:
+  - name: magda-common
+    version: "5.2.0"
+    repository: "oci://ghcr.io/magda-io/charts"

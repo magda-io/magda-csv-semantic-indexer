@@ -1,0 +1,91 @@
+# -- only for providing appropriate default value for helm lint
+global:
+  image: {}
+  rollingUpdate: {}
+  searchEngine: 
+    semanticIndexer:
+      indexName:
+      indexVersion:
+      numberOfShards: 1
+      numberOfReplicas: 0
+      knnVectorFieldConfig:
+        # -- Vector workload mode: `on_disk` or `in_memory`.
+        mode: "in_memory"
+        # -- Dimension of the embedding vectors.
+        dimension: 768
+        # -- The compression_level mapping parameter selects a quantization encoder that reduces vector memory consumption by the given factor.
+        compressionLevel: null
+        # Supported values: l1, l2, innerProduct, cosine, linf
+        spaceType: "l2"
+        # -- Similar to efSearch but used during index construction. Higher values improve search quality but increase index build time.
+        efConstruction: 100
+        # -- The size of the candidate queue during search. Larger values may improve search quality but increase search latency.
+        efSearch: 100
+        # -- The maximum number of graph edges per vector. Higher values increase memory usage but may improve search quality.
+        m: 16
+        # -- FAISS Encoder configuration (If compressionLevel is set, encoder will be ignored).
+        encoder:
+          name: "sq"
+          type: "fp16"
+          clip: false
+    defaultDatasetBucket: "magda-datasets"
+
+opensearchURL: http://opensearch:9200
+embeddingApiURL: http://magda-embedding-api
+
+# -- Service port configuration
+port: 6305
+
+defaultSemanticIndexerConfig:
+  id: "csv-semantic-indexer"
+  chunkSizeLimit: 512
+  overlap: 50
+  indexName: "semantic-index"
+  indexVersion: 1
+  chunkSizeLimit: 512
+  overlap: 50
+  bulkEmbeddingsSize: 1
+  bulkIndexSize: 50
+
+semanticIndexer:
+  # -- (string) Semantic indexer ID
+  id: ""
+  # -- (string) index name
+  indexName: 
+  # -- (int) index version
+  indexVersion: 
+  # -- (int) The maximum number of tokens in a single chunk.
+  chunkSizeLimit:
+  # -- (int) The number of overlapping tokens between chunks.
+  overlap:
+  # -- (int) number of string we request embedding api to process in one request
+  bulkEmbeddingsSize: 
+  # -- (int) Number of documents we send to OpenSearch for bulk processing in a single request
+  bulkIndexSize: 
+
+minioConfig:
+  endPoint: "magda-minio"
+  port: 9000
+  region: ""
+  useSSL: false
+  defaultDatasetBucket: ""
+
+image: 
+  name: "magda-csv-semantic-indexer"
+  # tag: 
+  # pullPolicy: 
+  # imagePullSecret: 
+
+defaultImage:
+  repository: ghcr.io/magda-io
+  pullPolicy: IfNotPresent
+  imagePullSecret: false
+
+defaultAdminUserId: "00000000-0000-4000-8000-000000000000"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 200Mi
+  limits:
+    cpu: 100m
