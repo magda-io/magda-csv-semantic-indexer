@@ -1,6 +1,6 @@
 # magda-csv-semantic-indexer
 
-![Version: 1.0.0-alpha.0](https://img.shields.io/badge/Version-1.0.0--alpha.0-informational?style=flat-square)
+![Version: 1.0.0-alpha.1](https://img.shields.io/badge/Version-1.0.0--alpha.1-informational?style=flat-square)
 
 A Helm chart for Magda CSV Semantic Indexer
 
@@ -23,6 +23,9 @@ Kubernetes: `>= 1.14.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | defaultAdminUserId | string | `"00000000-0000-4000-8000-000000000000"` |  |
+| defaultImage.imagePullSecret | bool | `false` |  |
+| defaultImage.pullPolicy | string | `"IfNotPresent"` |  |
+| defaultImage.repository | string | `"ghcr.io/magda-io"` |  |
 | defaultSemanticIndexerConfig.bulkEmbeddingsSize | int | `1` |  |
 | defaultSemanticIndexerConfig.bulkIndexSize | int | `50` |  |
 | defaultSemanticIndexerConfig.chunkSizeLimit | int | `512` |  |
@@ -33,18 +36,14 @@ Kubernetes: `>= 1.14.0-0`
 | defaultSemanticIndexerConfig.overlap | int | `50` |  |
 | defaultSemanticIndexerConfig.overlap | int | `50` |  |
 | embeddingApiURL | string | `"http://magda-embedding-api"` |  |
-| global | object | `{"image":{},"rollingUpdate":{},"searchEngine":{"defaultDatasetBucket":"magda-datasets","semanticIndexer":{"indexName":null,"indexVersion":null,"knnVectorFieldConfig":{"compressionLevel":null,"dimension":768,"efConstruction":100,"efSearch":100,"encoder":{"clip":false,"name":"sq","type":"fp16"},"m":16,"mode":"in_memory","spaceType":"l2"},"numberOfReplicas":0,"numberOfShards":1}}}` | only for providing appropriate default value for helm lint |
-| global.searchEngine.semanticIndexer.knnVectorFieldConfig.compressionLevel | string | `nil` | The compression_level mapping parameter selects a quantization encoder that reduces vector memory consumption by the given factor. |
+| global | object | `{"image":{},"rollingUpdate":{},"searchEngine":{"defaultDatasetBucket":"magda-datasets","semanticIndexer":{"indexName":null,"indexVersion":null,"knnVectorFieldConfig":{"compressionLevel":"32x","dimension":768,"efConstruction":100,"efSearch":100,"m":16,"mode":"on_disk","spaceType":"l2"},"numberOfReplicas":0,"numberOfShards":1}}}` | only for providing appropriate default value for helm lint |
+| global.searchEngine.semanticIndexer.knnVectorFieldConfig.compressionLevel | string | `"32x"` | The compression_level mapping parameter selects a quantization encoder that reduces vector memory consumption by the given factor. |
 | global.searchEngine.semanticIndexer.knnVectorFieldConfig.dimension | int | `768` | Dimension of the embedding vectors. |
 | global.searchEngine.semanticIndexer.knnVectorFieldConfig.efConstruction | int | `100` | Similar to efSearch but used during index construction. Higher values improve search quality but increase index build time. |
 | global.searchEngine.semanticIndexer.knnVectorFieldConfig.efSearch | int | `100` | The size of the candidate queue during search. Larger values may improve search quality but increase search latency. |
-| global.searchEngine.semanticIndexer.knnVectorFieldConfig.encoder | object | `{"clip":false,"name":"sq","type":"fp16"}` | FAISS Encoder configuration (If compressionLevel is set, encoder will be ignored). |
 | global.searchEngine.semanticIndexer.knnVectorFieldConfig.m | int | `16` | The maximum number of graph edges per vector. Higher values increase memory usage but may improve search quality. |
-| global.searchEngine.semanticIndexer.knnVectorFieldConfig.mode | string | `"in_memory"` | Vector workload mode: `on_disk` or `in_memory`. |
-| image.name | string | `"data61/magda-csv-semantic-indexer"` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"localhost:5000"` |  |
-| image.tag | string | `"latest"` |  |
+| global.searchEngine.semanticIndexer.knnVectorFieldConfig.mode | string | `"on_disk"` | Vector workload mode: `on_disk` or `in_memory`. |
+| image.name | string | `"magda-csv-semantic-indexer"` |  |
 | minioConfig.defaultDatasetBucket | string | `""` |  |
 | minioConfig.endPoint | string | `"magda-minio"` |  |
 | minioConfig.port | int | `9000` |  |
@@ -58,7 +57,7 @@ Kubernetes: `>= 1.14.0-0`
 | semanticIndexer.bulkEmbeddingsSize | int | `nil` | number of string we request embedding api to process in one request |
 | semanticIndexer.bulkIndexSize | int | `nil` | Number of documents we send to OpenSearch for bulk processing in a single request |
 | semanticIndexer.chunkSizeLimit | int | `nil` | The maximum number of tokens in a single chunk. |
-| semanticIndexer.id | string | `"csv-semantic-indexer-5"` | Semantic indexer ID |
+| semanticIndexer.id | string | `""` | Semantic indexer ID |
 | semanticIndexer.indexName | string | `nil` | index name |
 | semanticIndexer.indexVersion | int | `nil` | index version |
 | semanticIndexer.overlap | int | `nil` | The number of overlapping tokens between chunks. |
