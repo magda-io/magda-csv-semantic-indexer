@@ -44,7 +44,7 @@ spec:
 {{ toYaml .Values.resources | indent 10 }}
         env:
         - name: NODE_PORT
-          value: "80"
+          value: {{ .Values.port | quote }}
         - name: REGISTRY_URL
           value: "http://registry-api/v0"
         - name: REGISTRY_READ_ONLY_URL
