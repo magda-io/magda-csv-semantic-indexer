@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: magda-csv-semantic-indexer
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxUnavailable: {{ .Values.global.rollingUpdate.maxUnavailable | default 0 }}
+  selector:
+    matchLabels:
+      service: magda-csv-semantic-indexer
+  template:
+    metadata:
+      labels:
+        service: magda-csv-semantic-indexer
+    spec:
+      {{- include "magda.imagePullSecrets" . | indent 6 }}
+      containers:
+      - name: magda-csv-semantic-indexer
+        image: {{ include "magda.image" . | quote }}
+        imagePullPolicy: {{ include "magda.imagePullPolicy" . | quote }}
+        command: [
+            "node",
+            "/usr/src/app/component/dist/index.js",
+            "--semanticIndexerConfig", "/etc/config/semantic-indexer.json",
+            "--minioConfig", "/etc/config/minio.json",
+            "--opensearchApiURL", "{{ .Values.opensearchURL }}",
+            "--embeddingApiURL", "{{ .Values.embeddingApiURL }}",
+            "--id", "{{ .Values.semanticIndexer.id | default .Values.defaultSemanticIndexerConfig.id }}",
+            "--chunkSizeLimit", "{{ .Values.semanticIndexer.chunkSizeLimit | default .Values.defaultSemanticIndexerConfig.chunkSizeLimit }}",
+            "--overlap", "{{ .Values.semanticIndexer.overlap | default .Values.defaultSemanticIndexerConfig.overlap }}"
+        ]
+{{- if .Values.global.enableLivenessProbes }}
+        livenessProbe:
+          httpGet:
+            path: "/healthz"
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 10
+{{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        env:
+        - name: NODE_PORT
+          value: {{ .Values.port | quote }}
+        - name: REGISTRY_URL
+          value: "http://registry-api/v0"
+        - name: REGISTRY_READ_ONLY_URL
+          value: "http://registry-api-read-only/v0"
+        - name: ENABLE_MULTI_TENANTS
+{{- if .Values.global.enableMultiTenants }}
+          value: "true"
+{{- else }}
+          value: "false"
+{{- end }}
+        - name: TENANT_URL
+          value: "http://tenant-api/v0"
+        - name: USER_ID
+          value: {{ .Values.global.defaultAdminUserId | default .Values.defaultAdminUserId }}
+        - name: INTERNAL_URL
+          value: "http://magda-csv-semantic-indexer"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secrets
+              key: jwt-secret
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage-secrets
+              key: secretkey
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: storage-secrets
+              key: accesskey
+        - name: PORT
+          value: "{{ .Values.port }}"
+        volumeMounts:
+        - name: "{{ .Chart.Name }}-config"
+          mountPath: "/etc/config"
+          readOnly: true
+      volumes:
+      - name: "{{ .Chart.Name }}-config"
+        configMap:
+          name: "{{ .Chart.Name }}-config"
