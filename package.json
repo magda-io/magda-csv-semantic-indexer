@@ -14,7 +14,7 @@
         "compile": "tsc -b",
         "watch": "tsc -b --watch",
         "start": "node dist/index.js",
-        "dev": "nodemon --watch src --exec ts-node src/index.ts",
+        "dev": "nodemon --watch src -e ts,js --exec \"node --loader ts-node/esm src/index.ts --config ./dev-config.json\"",
         "test": "mocha",
         "docker-build-local": "create-docker-context-for-node-component --build --push --tag auto --local",
         "docker-build-prod": "create-docker-context-for-node-component --build --push --tag auto",
@@ -33,7 +33,8 @@
         "@types/fs-extra": "^11.0.4",
         "@types/mocha": "^10.0.10",
         "@types/nock": "^11.1.0",
-        "@types/node": "^20.19.0",
+        "@types/node": "^24.3.1",
+        "nodemon": "^3.1.10",
         "@types/sinon": "^17.0.4",
         "@types/yargs": "^17.0.33",
         "chai": "^5.2.0",
@@ -52,7 +53,7 @@
         "@langchain/core": "^0.3.61",
         "@langchain/textsplitters": "https://gitpkg.vercel.app/JHZhang2736/langchainjs/libs/langchain-textsplitters?textsplitters-build",
         "@magda/esm-utils": "^1.0.1",
-        "@magda/semantic-indexer-sdk": "6.0.0-alpha.8",
+        "@magda/semantic-indexer-sdk": "6.0.0-alpha.10",
         "csv-parse": "^6.1.0",
         "fs-extra": "^11.3.0",
         "yargs": "17.6.2"
@@ -81,5 +82,8 @@
         "spec": [
             "src/test/**/*.spec.ts"
         ]
+    },
+    "engines": {
+        "node": ">=24.0.0"
     }
 }

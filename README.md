@@ -29,11 +29,9 @@ Kubernetes: `>= 1.14.0-0`
 | defaultSemanticIndexerConfig.bulkEmbeddingsSize | int | `1` |  |
 | defaultSemanticIndexerConfig.bulkIndexSize | int | `50` |  |
 | defaultSemanticIndexerConfig.chunkSizeLimit | int | `512` |  |
-| defaultSemanticIndexerConfig.chunkSizeLimit | int | `512` |  |
 | defaultSemanticIndexerConfig.id | string | `"csv-semantic-indexer"` |  |
 | defaultSemanticIndexerConfig.indexName | string | `"semantic-index"` |  |
 | defaultSemanticIndexerConfig.indexVersion | int | `1` |  |
-| defaultSemanticIndexerConfig.overlap | int | `50` |  |
 | defaultSemanticIndexerConfig.overlap | int | `50` |  |
 | embeddingApiURL | string | `"http://magda-embedding-api"` |  |
 | global | object | `{"image":{},"rollingUpdate":{},"searchEngine":{"defaultDatasetBucket":"magda-datasets","semanticIndexer":{"indexName":null,"indexVersion":null,"knnVectorFieldConfig":{"compressionLevel":"32x","dimension":768,"efConstruction":100,"efSearch":100,"m":16,"mode":"on_disk","spaceType":"l2"},"numberOfReplicas":0,"numberOfShards":1}}}` | only for providing appropriate default value for helm lint |
@@ -51,8 +49,9 @@ Kubernetes: `>= 1.14.0-0`
 | minioConfig.useSSL | bool | `false` |  |
 | opensearchURL | string | `"http://opensearch:9200"` |  |
 | port | int | `6305` | Service port configuration |
-| resources.limits.cpu | string | `"100m"` |  |
-| resources.requests.cpu | string | `"50m"` |  |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"512Mi"` |  |
+| resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"200Mi"` |  |
 | semanticIndexer.bulkEmbeddingsSize | int | `nil` | number of string we request embedding api to process in one request |
 | semanticIndexer.bulkIndexSize | int | `nil` | Number of documents we send to OpenSearch for bulk processing in a single request |

@@ -1,0 +1,20 @@
+{
+  "bulkEmbeddingsSize": 1,
+  "bulkIndexSize": 50,
+  "chunkSizeLimit": 512,
+  "id": "csv-semantic-indexer",
+  "indexName": "semantic-index",
+  "indexVersion": 1,
+  "knnVectorFieldConfig": {
+    "compressionLevel": "32x",
+    "dimension": 768,
+    "efConstruction": 100,
+    "efSearch": 100,
+    "m": 16,
+    "mode": "on_disk",
+    "spaceType": "l2"
+  },
+  "numberOfReplicas": 0,
+  "numberOfShards": 1,
+  "overlap": 50
+}

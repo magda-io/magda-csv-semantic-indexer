@@ -1,0 +1,7 @@
+{
+  "defaultDatasetBucket": "magda-datasets",
+  "endPoint": "localhost",
+  "port": 9000,
+  "region": "",
+  "useSSL": false
+}

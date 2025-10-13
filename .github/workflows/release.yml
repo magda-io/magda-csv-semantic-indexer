@@ -12,12 +12,12 @@ jobs:
     name: Release Helm Chart
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
 
-      - name: Use Node.js 18
-        uses: actions/setup-node@v1
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
         with:
-          node-version: 18
+          node-version: 24
 
       - name: Login to GitHub Container Registry
         run: |

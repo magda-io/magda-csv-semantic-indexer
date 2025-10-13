@@ -42,8 +42,6 @@ defaultSemanticIndexerConfig:
   overlap: 50
   indexName: "semantic-index"
   indexVersion: 1
-  chunkSizeLimit: 512
-  overlap: 50
   bulkEmbeddingsSize: 1
   bulkIndexSize: 50
 
@@ -85,7 +83,8 @@ defaultAdminUserId: "00000000-0000-4000-8000-000000000000"
 
 resources:
   requests:
-    cpu: 50m
+    cpu: 100m
     memory: 200Mi
   limits:
-    cpu: 100m
+    cpu: 500m
+    memory: 512Mi
