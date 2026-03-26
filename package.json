@@ -1,7 +1,7 @@
 {
     "name": "@magda/magda-csv-semantic-indexer",
     "version": "1.0.0-alpha.1",
-    "description": "Magda CSV Semantic Indexer",
+    "description": "Magda tabular semantic indexer (CSV, TSV, Excel workbooks)",
     "type": "module",
     "files": [
         "dist"
@@ -24,7 +24,13 @@
         "update-all-charts": "helm dep up ./deploy/magda-csv-semantic-indexer",
         "add-all-chart-version-changes": "git ls-files -m | grep Chart.yaml | xargs git add && git ls-files -m | grep Chart.lock | xargs git add",
         "add-all-helm-docs-changes": "yarn helm-docs && git ls-files -m | grep -i readme.md | xargs git add",
-        "version": "yarn update-helm-chart-version && yarn update-all-charts && yarn add-all-chart-version-changes && yarn add-all-helm-docs-changes"
+        "version": "yarn update-helm-chart-version && yarn update-all-charts && yarn add-all-chart-version-changes && yarn add-all-helm-docs-changes",
+        "local:opensearch": "docker compose up -d",
+        "local:registry": "node scripts/mock-registry.mjs",
+        "local:embedding": "node scripts/mock-embedding.mjs",
+        "local:mocks": "node scripts/start-local-mocks.mjs",
+        "local:wait-os": "node scripts/wait-for-http.mjs http://127.0.0.1:9200",
+        "local:start": "yarn build && node dist/index.js --config ./dev-config.json"
     },
     "devDependencies": {
         "@magda/ci-utils": "^1.0.5",
@@ -34,13 +40,13 @@
         "@types/mocha": "^10.0.10",
         "@types/nock": "^11.1.0",
         "@types/node": "^24.3.1",
-        "nodemon": "^3.1.10",
         "@types/sinon": "^17.0.4",
         "@types/yargs": "^17.0.33",
         "chai": "^5.2.0",
         "husky": "^9.1.7",
         "mocha": "^11.7.1",
         "nock": "^14.0.7",
+        "nodemon": "^3.1.10",
         "prettier": "^3.5.3",
         "pretty-quick": "^4.2.2",
         "rimraf": "^3.0.0",
@@ -51,11 +57,12 @@
     },
     "dependencies": {
         "@langchain/core": "^0.3.61",
-        "@langchain/textsplitters": "https://gitpkg.vercel.app/JHZhang2736/langchainjs/libs/langchain-textsplitters?textsplitters-build",
+        "@langchain/textsplitters": "^0.1.0",
         "@magda/esm-utils": "^1.0.1",
         "@magda/semantic-indexer-sdk": "6.0.0-alpha.10",
         "csv-parse": "^6.1.0",
         "fs-extra": "^11.3.0",
+        "xlsx": "^0.18.5",
         "yargs": "17.6.2"
     },
     "resolutions": {
