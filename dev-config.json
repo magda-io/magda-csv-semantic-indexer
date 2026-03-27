@@ -1,5 +1,5 @@
 {
-    "internalUrl": "http://magda-csv-semantic-indexer",
+    "internalUrl": "http://127.0.0.1:6305",
     "registryUrl": "http://localhost:6101/v0",
     "registryReadonlyURL": "http://localhost:6101/v0",
     "semanticIndexerConfig": "../../../../dev-indexer-config.json",
@@ -7,6 +7,7 @@
     "opensearchApiURL": "http://localhost:9200",
     "embeddingApiURL": "http://localhost:3000",
     "jwtSecret": "replace_me",
-    "minioAccessKey": "reaplce_me",
+    "userId": "00000000-0000-4000-8000-000000000000",
+    "minioAccessKey": "replace_me",
     "minioSecretKey": "replace_me"
 }
