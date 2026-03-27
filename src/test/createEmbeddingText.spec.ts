@@ -5,6 +5,7 @@ import { join, basename } from "path";
 import { tmpdir } from "os";
 import { createEmbeddingText, formatTemporal, getColumnsFromCSVStream } from "../createEmbeddingText.js";
 import nock from "nock";
+import * as XLSX from "xlsx";
 
 describe("createEmbeddingText", () => {
     let tempFile: string;
@@ -242,6 +243,109 @@ describe("createEmbeddingText", () => {
         const yamlObj = parseYaml(text);
 
         expect(yamlObj.Description).to.equal("First line\nSecond line");
+    });
+});
+
+describe("createEmbeddingText tabular (Excel and TSV)", () => {
+    let xlsxFile: string;
+
+    before(() => {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([
+                ["Product", "Qty"],
+                ["A", 1],
+            ]),
+            "Sales",
+        );
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([["SKU"], ["Z"]]),
+            "Stock",
+        );
+        xlsxFile = join(tmpdir(), "tabular-emb.xlsx");
+        fs.writeFileSync(
+            xlsxFile,
+            XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer,
+        );
+    });
+
+    after(() => {
+        try {
+            fs.unlinkSync(xlsxFile);
+        } catch {
+            /* ignore */
+        }
+    });
+
+    const minimalRecord = {
+        id: "dist-x",
+        aspects: { "dcat-distribution-strings": {} },
+        name: "dist-x",
+        sourceTag: "src",
+        tenantId: 0,
+    };
+
+    it("places multi-sheet XLSX structure under Tables", async () => {
+        const { text } = await createEmbeddingText({
+            record: minimalRecord,
+            format: "XLSX",
+            filePath: xlsxFile,
+            url: "http://example.com/data.xlsx",
+            readonlyRegistry: undefined as any,
+        });
+        const yamlObj = parseYaml(text) as any;
+        expect(yamlObj.Tables).to.have.length(2);
+        expect(yamlObj.Tables[0]).to.deep.equal({
+            sheet: "Sales",
+            columns: ["Product", "Qty"],
+        });
+        expect(yamlObj.Tables[1]).to.deep.equal({
+            sheet: "Stock",
+            columns: ["SKU"],
+        });
+        expect(yamlObj).to.not.have.property("Column names");
+    });
+
+    it("loads XLSX from URL via nock", async () => {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([["u", "v"]]),
+            "Only",
+        );
+        const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+        nock("http://example.com").get("/remote.xlsx").reply(200, buf, {
+            "Content-Type":
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const { text } = await createEmbeddingText({
+            record: minimalRecord,
+            format: "XLSX",
+            filePath: "",
+            url: "http://example.com/remote.xlsx",
+            readonlyRegistry: undefined as any,
+        });
+        nock.cleanAll();
+        const yamlObj = parseYaml(text) as any;
+        expect(yamlObj["Column names"]).to.deep.equal(["u", "v"]);
+        expect(yamlObj.Sheet).to.equal("Only");
+    });
+
+    it("reads TSV headers from a local file", async () => {
+        const tsvPath = join(tmpdir(), "tabular.tsv");
+        fs.writeFileSync(tsvPath, "col_one\tcol_two\n1\t2\n");
+        const { text } = await createEmbeddingText({
+            record: minimalRecord,
+            format: "TSV",
+            filePath: tsvPath,
+            url: "",
+            readonlyRegistry: undefined as any,
+        });
+        fs.unlinkSync(tsvPath);
+        const yamlObj = parseYaml(text) as any;
+        expect(yamlObj["Column names"]).to.deep.equal(["col_one", "col_two"]);
     });
 });
 
