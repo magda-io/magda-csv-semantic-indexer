@@ -20,7 +20,7 @@ const options: SemanticIndexerOptions = {
     argv: args,
     id: csvSemanticIndexerArgs.id,
     itemType: "storageObject",
-    formatTypes: ["csv"],
+    formatTypes: ["csv", "tsv", "xlsx", "xls", "xlsm"],
     autoDownloadFile: false,
     createEmbeddingText: createEmbeddingText,
     chunkStrategy: chunkStrategy,
