@@ -2,7 +2,7 @@ apiVersion: v2
 name: magda-csv-semantic-indexer
 version: 1.0.0-alpha.1
 kubeVersion: ">= 1.14.0-0"
-description: A Helm chart for Magda CSV Semantic Indexer
+description: A Helm chart for Magda tabular semantic indexer (CSV, TSV, Excel)
 home: "https://github.com/magda-io/magda-csv-semantic-indexer"
 sources:
   - https://github.com/magda-io/magda-csv-semantic-indexer
