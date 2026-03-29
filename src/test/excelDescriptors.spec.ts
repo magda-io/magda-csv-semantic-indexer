@@ -30,4 +30,28 @@ describe("readExcelDescriptorsFromBuffer", () => {
             columns: ["Code"],
         });
     });
+
+    it("omits sheets whose first row has no header cells", () => {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([
+                ["", "", ""],
+                ["x", "y"],
+            ]),
+            "NoHeaders",
+        );
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([["A", "B"], [1, 2]]),
+            "HasHeaders",
+        );
+        const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+        const tables = readExcelDescriptorsFromBuffer(buf);
+        expect(tables).to.have.length(1);
+        expect(tables[0]).to.deep.include({
+            sheetName: "HasHeaders",
+            columns: ["A", "B"],
+        });
+    });
 });
