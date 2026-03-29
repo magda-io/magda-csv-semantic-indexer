@@ -44,6 +44,9 @@ jspm_packages/
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
+# Local tabular test exports (keep repo clean when debugging workbooks)
+*.tabular.debug.xlsx
+
 # TypeScript cache
 *.tsbuildinfo
 
