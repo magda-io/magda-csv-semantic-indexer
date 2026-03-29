@@ -21,7 +21,14 @@ export function inferTabularKind(
     if (ext === ".tsv" || fmt.includes("tsv") || fmt.includes("tab-separated")) {
         return "tsv";
     }
-    if (ext === ".xlsx" || ext === ".xlsm" || fmt.includes("xlsx")) {
+    if (
+        ext === ".xlsx" ||
+        ext === ".xlsm" ||
+        ext === ".ods" ||
+        fmt.includes("xlsx") ||
+        fmt.includes("ods") ||
+        fmt.includes("opendocument.spreadsheet")
+    ) {
         return "xlsx";
     }
     if (
