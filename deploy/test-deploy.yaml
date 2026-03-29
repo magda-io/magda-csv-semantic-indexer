@@ -1,0 +1,3 @@
+# Merged by `helm lint` / CI (`yarn helm-lint`) for validation only.
+image:
+  tag: "test"
