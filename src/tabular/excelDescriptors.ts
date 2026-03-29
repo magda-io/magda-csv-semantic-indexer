@@ -48,8 +48,11 @@ export function readExcelDescriptorsFromBuffer(buf: Buffer): TabularTableDescrip
     for (const sheetName of visibleSheetNames(workbook)) {
         const sheet = workbook.Sheets[sheetName];
         if (!sheet) continue;
-        const columns = headerRowFromSheet(sheet, sheet["!ref"] ? XLSX.utils.decode_range(sheet["!ref"]).s.r : 0);
-        if (columns.length === 0 && !sheet["!ref"]) {
+        const columns = headerRowFromSheet(
+            sheet,
+            sheet["!ref"] ? XLSX.utils.decode_range(sheet["!ref"]).s.r : 0,
+        );
+        if (columns.length === 0) {
             continue;
         }
         out.push({ sheetName, columns });
