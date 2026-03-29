@@ -5,7 +5,7 @@ export const csvSemanticIndexerArgs = yargs(process.argv.slice(2))
     .option('id', {
         type: 'string',
         default: 'csv-semantic-indexer',
-        description: 'Semantic indexer service ID'
+        description: 'Semantic indexer service ID (tabular: CSV, TSV, Excel)'
     })
     .option('chunkSizeLimit', {
         type: 'number',

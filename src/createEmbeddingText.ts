@@ -1,44 +1,32 @@
 import {
     CreateEmbeddingText,
-    Record,
-    AuthorizedRegistryClient as Registry
+    Record as MagdaRecord,
+    AuthorizedRegistryClient as Registry,
 } from "@magda/semantic-indexer-sdk";
-import { openSync, readSync, closeSync, existsSync } from "fs";
 import { basename } from "path";
 import { toYaml } from "./utils/toYaml.js";
-import { parse } from "csv-parse";
-import fse from "fs-extra";
-import path from "path";
-import { Readable } from "stream";
-import type { ReadableStream as WebReadableStream } from "stream/web";
-import { __dirname as getCurDirPath } from "@magda/esm-utils";
+import { resolveTabularDescriptors } from "./tabular/resolveDescriptors.js";
+import type { TabularTableDescriptor } from "./tabular/types.js";
 
-const __dirname = getCurDirPath();
-
-export function readFirstBytes(path: string, bytes: number): string {
-    const fd = openSync(path, "r");
-    const buf = Buffer.alloc(bytes);
-    const len = readSync(fd, buf, 0, bytes, 0);
-    closeSync(fd);
-    return buf.toString("utf8", 0, len);
-}
+export { readFirstBytes } from "./tabular/readFirstBytes.js";
+export { getColumnsFromCSVStream } from "./tabular/csvStream.js";
 
 export async function getDatasetRecord(
     distributionId: string,
-    registry: Registry
-): Promise<Record | null> {
+    registry: Registry,
+): Promise<MagdaRecord | null> {
     try {
-        const result = await registry.getRecords<Record>(
+        const result = await registry.getRecords<MagdaRecord>(
             ["dataset-distributions"],
             undefined,
             undefined,
             true,
             undefined,
-            ["dataset-distributions.distributions:<|" + distributionId]
+            ["dataset-distributions.distributions:<|" + distributionId],
         );
 
         if ("records" in result) {
-            return (result.records[0]) || null;
+            return result.records[0] || null;
         }
         return null;
     } catch (e) {
@@ -66,98 +54,27 @@ export function formatTemporal(tc?: { start?: string; end?: string }): string {
     return "";
 }
 
-const CONNECTION_TIMEOUT = 120;
-
-function toNodeReadable(body: any): NodeJS.ReadableStream {
-    return typeof body?.pipe === "function"
-        ? body
-        : Readable.fromWeb(body as WebReadableStream<Uint8Array>);
-}
-
-let cachedPackageInfo: { name: string; version: string } | null = null;
-
-async function getPackageInfo() {
-    if (!cachedPackageInfo) {
-        cachedPackageInfo = await fse.readJSON(path.resolve(__dirname, "../package.json"), {
-            encoding: "utf-8"
-        });
+function applyYamlTabularFields(
+    payload: { [key: string]: unknown },
+    descriptors: TabularTableDescriptor[],
+): void {
+    if (descriptors.length === 0) {
+        return;
     }
-    return cachedPackageInfo;
-}
-
-export async function getColumnsFromCSVStream(downloadURL: string, timeout: number = CONNECTION_TIMEOUT * 1000): Promise<string[]> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    const pkg = await getPackageInfo();
-
-    try {
-        const res = await fetch(downloadURL, {
-            redirect: "follow",
-            headers: {
-                "User-Agent": `${pkg?.name}/${pkg?.version}`
-            },
-            signal: controller.signal
-        });
-        
-        if (!res.ok || !res.body) {
-            throw new Error(`HTTP ${res.status} fetching ${downloadURL}`);
+    if (descriptors.length === 1) {
+        const d = descriptors[0];
+        if (d.columns.length > 0) {
+            payload["Column names"] = d.columns;
         }
-
-        const parser = parse({
-            bom: true,
-            trim: true,
-            skip_empty_lines: true,
-            relax_column_count: true,
-            delimiter: [",", ";", "\t", "|"],
-            from_line: 1,
-            to_line: 1,
-            columns: false
-        });
-
-        const csvStream: NodeJS.ReadableStream = toNodeReadable(res.body);
-
-        const cols = await new Promise<string[]>((resolve, reject) => {
-            let resolved = false;
-            
-            const handleResolve = (columns: string[]) => {
-                if (!resolved) {
-                    resolved = true;
-                    resolve(columns);
-                }
-            };
-            
-            const handleReject = (error: Error) => {
-                if (!resolved) {
-                    resolved = true;
-                    reject(new Error(`CSV parsing error: ${error.message}`));
-                }
-            };
-            
-            csvStream
-                .pipe(parser)
-                .on("data", (row: string[]) => {
-                    const columns = row.map(col => col.trim()).filter(Boolean);
-                    handleResolve(columns);
-                })
-                .on("error", (error) => {
-                    if (error.name === 'AbortError') {
-                        return;
-                    }
-                    handleReject(error);
-                })
-                .on("end", () => {
-                    handleResolve([]);
-                });
-        });
-        return cols;
-    } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Timeout when fetching CSV');
+        if (d.sheetName) {
+            payload["Sheet"] = d.sheetName;
         }
-        throw new Error(`Failed to fetch CSV: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-        clearTimeout(timeoutId);
+        return;
     }
+    payload["Tables"] = descriptors.map((d) => ({
+        sheet: d.sheetName,
+        columns: d.columns,
+    }));
 }
 
 export const createEmbeddingText: CreateEmbeddingText = async ({
@@ -165,7 +82,7 @@ export const createEmbeddingText: CreateEmbeddingText = async ({
     format,
     filePath,
     url,
-    readonlyRegistry
+    readonlyRegistry,
 }) => {
     const dist = record.aspects?.["dcat-distribution-strings"] ?? {};
     let title = (dist.title ?? "").trim();
@@ -179,10 +96,7 @@ export const createEmbeddingText: CreateEmbeddingText = async ({
     let languages = [];
 
     if (readonlyRegistry) {
-        const dataset = await getDatasetRecord(
-            record.id,
-            readonlyRegistry
-        );
+        const dataset = await getDatasetRecord(record.id, readonlyRegistry);
 
         const dsStr = dataset?.aspects?.["dcat-dataset-strings"];
 
@@ -202,22 +116,13 @@ export const createEmbeddingText: CreateEmbeddingText = async ({
         }
     }
 
-    let columns: string[] = [];
-    if (filePath && existsSync(filePath)) {
-        const header = readFirstBytes(filePath, 64 * 1024).split(/\r?\n/)[0] ?? "";
-        columns = header.split(",").map(c => c.trim()).filter(Boolean);
-    } else if (url) {
-        try {
-            columns = await getColumnsFromCSVStream(url);
-        } catch (e) {
-            if (e instanceof Error) {
-                console.warn("Failed to get columns from CSV file", e.message);
-            }
-            columns = [];
-        }
-    }
+    const descriptors = await resolveTabularDescriptors(
+        filePath ?? undefined,
+        url ?? undefined,
+        format ?? undefined,
+    );
 
-    const yamlText = toYaml({
+    const payload: { [key: string]: unknown } = {
         Title: title || undefined,
         Format: format || "CSV",
         "File name": fileName || undefined,
@@ -228,8 +133,11 @@ export const createEmbeddingText: CreateEmbeddingText = async ({
         Keywords: keywords || undefined,
         Languages: languages || undefined,
         Description: description || undefined,
-        "Column names": columns || undefined
-    });
+    };
+
+    applyYamlTabularFields(payload, descriptors);
+
+    const yamlText = toYaml(payload);
 
     return { text: yamlText };
 };
