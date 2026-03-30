@@ -2,6 +2,16 @@ import fs from "fs";
 import * as XLSX from "xlsx";
 import type { TabularTableDescriptor } from "./types.js";
 
+function dedupeColumnNames(headers: string[]): string[] {
+    const counts = new Map<string, number>();
+    return headers.map((h) => {
+        const next = (counts.get(h) ?? 0) + 1;
+        counts.set(h, next);
+        if (next === 1) return h;
+        return `${h}_${next}`;
+    });
+}
+
 function visibleSheetNames(workbook: XLSX.WorkBook): string[] {
     const names = workbook.SheetNames || [];
     const meta = workbook.Workbook?.Sheets;
@@ -39,7 +49,8 @@ function headerRowFromSheet(
     while (headers.length > 0 && headers[headers.length - 1] === "") {
         headers.pop();
     }
-    return headers.filter(Boolean);
+    const nonEmpty = headers.filter(Boolean);
+    return dedupeColumnNames(nonEmpty);
 }
 
 export function readExcelDescriptorsFromBuffer(buf: Buffer): TabularTableDescriptor[] {

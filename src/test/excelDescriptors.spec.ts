@@ -31,6 +31,18 @@ describe("readExcelDescriptorsFromBuffer", () => {
         });
     });
 
+    it("stabilises duplicate header labels with numeric suffixes", () => {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet([["id", "name", "name", "total"]]),
+            "Dupes",
+        );
+        const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+        const tables = readExcelDescriptorsFromBuffer(buf);
+        expect(tables[0].columns).to.deep.equal(["id", "name", "name_2", "total"]);
+    });
+
     it("omits sheets whose first row has no header cells", () => {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(
