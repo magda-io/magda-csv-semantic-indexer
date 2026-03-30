@@ -12,8 +12,12 @@ describe("inferTabularKind", () => {
     it("detects Excel formats", () => {
         expect(inferTabularKind(undefined, "c:\\data.xlsx", undefined)).to.equal("xlsx");
         expect(inferTabularKind(undefined, "macro.xlsm", undefined)).to.equal("xlsx");
+        expect(inferTabularKind(undefined, "budget.ods", undefined)).to.equal("xlsx");
         expect(inferTabularKind(undefined, "legacy.xls", undefined)).to.equal("xls");
         expect(inferTabularKind("Microsoft Excel", undefined, undefined)).to.equal("xlsx");
+        expect(
+            inferTabularKind("OpenDocument Spreadsheet", undefined, undefined),
+        ).to.equal("xlsx");
         expect(
             inferTabularKind(
                 undefined,
@@ -21,6 +25,13 @@ describe("inferTabularKind", () => {
                 "https://example.org/file.xls?x=1",
             ),
         ).to.equal("xls");
+        expect(
+            inferTabularKind(
+                undefined,
+                undefined,
+                "https://example.org/data.ods",
+            ),
+        ).to.equal("xlsx");
     });
 
     it("detects CSV", () => {
