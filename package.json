@@ -51,7 +51,6 @@
     },
     "dependencies": {
         "@langchain/core": "^0.3.61",
-        "@langchain/textsplitters": "https://gitpkg.vercel.app/JHZhang2736/langchainjs/libs/langchain-textsplitters?textsplitters-build",
         "@magda/esm-utils": "^1.0.1",
         "@magda/semantic-indexer-sdk": "6.0.0-alpha.10",
         "csv-parse": "^6.1.0",

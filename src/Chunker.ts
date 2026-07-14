@@ -1,7 +1,7 @@
 import {
     ChunkResult,
 } from "@magda/semantic-indexer-sdk";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { RecursiveCharacterTextSplitter } from "./textSplitters.js";
 
 export class Chunker {
     private chunkSize: number;
